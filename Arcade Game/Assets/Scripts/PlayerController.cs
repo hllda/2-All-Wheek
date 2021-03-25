@@ -1,13 +1,15 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController :MonoBehaviour
 {
     public float verticalInput;
     public float horizontalInput;
+    public float speed;
     public Rigidbody2D playerRb;
-    
+    private float rotation;
+    private float input;
+    private Vector2 direction;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -15,18 +17,48 @@ public class PlayerController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         verticalInput = Input.GetAxis("Vertical");
-
-        playerRb.AddForce(Vector2.up * verticalInput, ForceMode2D.Impulse);
-
-
         horizontalInput = Input.GetAxis("Horizontal");
 
-        playerRb.AddForce(Vector2.right * horizontalInput, ForceMode2D.Impulse);
+        if(verticalInput != 0)
+        {
+            direction = Vector2.up;
+            input = verticalInput;
 
+            if(verticalInput < 0)
+            {
+                rotation = 180;
+            }
 
-        playerRb.transform(Vector2.right, playerRb.rotation)
+            else if(verticalInput > 0)
+            {
+                rotation = 0;
+            }
+        }    
+
+        else if(horizontalInput != 0)
+        {
+            direction = Vector2.right;
+            input = horizontalInput;
+
+            if(horizontalInput < 0)
+            {
+                rotation = 90;
+            }
+
+            else if(horizontalInput > 0)
+            {
+                rotation = 270;
+            }
+        }
+
+        playerRb.MoveRotation(rotation);
+        playerRb.MovePosition(playerRb.position + (input * direction * Time.deltaTime) * speed);
+
+        input = 0;
+        horizontalInput = 0;
+        verticalInput = 0;
     }
 }
