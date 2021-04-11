@@ -3,7 +3,17 @@ guid: bea86ccce4a11494094d2f79f1d542f9
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - gameOverScreen: {instanceID: 0}
+  - characterSelection: {instanceID: 0}
+  - gameplayHUD: {instanceID: 0}
+  - player: {instanceID: 0}
+  - spawn: {instanceID: 0}
+  - prints: {instanceID: 0}
+  - exit: {instanceID: 0}
+  - toggleOne: {instanceID: 0}
+  - toggleTwo: {instanceID: 0}
+  - titleScreen: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
