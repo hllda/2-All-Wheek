@@ -1,77 +1,107 @@
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using UnityEditor;
-using System.Collections.Generic;
-using System.Threading;
+using System;
 using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager:MonoBehaviour
 {
-	public GameObject titleBackground;
-	
-	public GameObject gameOverScreen;
-	public GameObject characterSelection;
-	public GameObject gameplayHUD;
+	// Reference to other scripts
+	public PlayerController playerController;
 
-	public GameObject player;
-
+	// States of the game
 	public bool gameIsActive = false;
-	public int lives;
-	public int score = 0;
+	public bool isGameWon = false;
+	public bool isGameLost = false;
 
-	public GameObject spawn;
-	public Vector2 spawnPosition;
-
-	public GameObject prints;
-	public GameObject exit;
-
-	public Button buttonOne;
-	public Button buttonTwo;
-
+	// Menu
+	public GameObject titleBackground;
 	public GameObject titleScreen;
+	public GameObject howToPlay;
+	public GameObject characterSelection;
+	public GameObject gameOverScreen;
+	public GameObject win;
+	public GameObject gameOver;
+	public GameObject gameplayHUD;
+	public GameObject pauseMenu;
 
+	// Character selection
 	public Button start;
 
-	public bool one;
-	public bool two;
+	public bool luna;
+	public bool kanel;
 
+	public Button lunaButton;
+	public Button kanelButton;
+
+	public GameObject characterLuna;
+	public GameObject characterKanel;
+
+	// Score
+	public int score;
 	public TextMeshProUGUI scoreText;
-	public TextMeshProUGUI finalScore;
+	public TextMeshProUGUI finalScoreText;
 
-	public GameObject characterOne;
-	public GameObject characterTwo;
-	
+	// Hearts
 	public GameObject ThreeLife;
 	public GameObject TwoLife;
 	public GameObject OneLife;
 
+	// Prints
+	public int printsRequirement;
+	public int printsCounter;
 
+	// Player
+	public GameObject player;
+	public int playerRotation;
+	public float coolDown = 0;
+
+	// Spawn
+	public GameObject spawn;
+	public Vector2 spawnPosition;
+
+	// Exit
+	public GameObject exit;
+	public Vector2 exitPosition;
+
+	// Level number
+	public int level;
+
+	// Levels
+	public GameObject levelOne;
+	public GameObject levelTwo;
+	public GameObject levelThree;
+	public GameObject levelFour;
+	public GameObject levelFive;
+	public GameObject levelSix;
+	public GameObject levelSeven;
 
 	public void Start()
-	{		
-		player = GameObject.Find("Player");
-		spawn = GameObject.Find("Spawn");
-		prints = GameObject.FindWithTag("Prints");
-		
+	{
+		level = 0;
 		score = 0;
+		playerController.lives = -1;
 
-		lives = 4;
-		spawnPosition = new Vector2(spawn.transform.position.x, spawn.transform.position.y);
+		player = GameObject.Find("Player");
+
+		LevelChanger();
 		TitleScreen();
 	}
 
 	void FixedUpdate()
-	{		
-		GameActivity();
-
-		if(gameIsActive == true)
+	{
+		if(player.activeInHierarchy == false)
 		{
-			UpdateScore();
-			// Energy consumption
+			Respawn();
 		}
 
-		else if(gameIsActive == false && lives <= 3)
+		else if(gameIsActive == true && isGameWon == false)
+		{
+			GameActivity();
+			UpdateScore();
+		}
+
+		if(playerController.lives == 0 || isGameWon == true)
 		{
 			GameOver();
 		}
@@ -83,7 +113,19 @@ public class GameManager:MonoBehaviour
 		titleScreen.SetActive(true);
 	}
 
-	public void Character()
+	public void OpenHowToPlay()
+	{
+		titleScreen.SetActive(false);
+		howToPlay.SetActive(true);
+	}
+
+	public void CloseHowToPlay()
+	{
+		howToPlay.SetActive(false);
+		titleScreen.SetActive(true);
+	}
+
+	public void CharacterSelection()
 	{
 		titleScreen.SetActive(false);
 		characterSelection.SetActive(true);
@@ -91,20 +133,18 @@ public class GameManager:MonoBehaviour
 
 	public void StartGame()
 	{
-		lives = 3;
-		
 		titleBackground.SetActive(false);
-		
-		if(one == true && two == false)
+
+		if(luna == true && kanel == false)
 		{
-			characterOne.SetActive(true);
-			characterTwo.SetActive(false);
+			characterLuna.SetActive(true);
+			characterKanel.SetActive(false);
 		}
 
-		if(two == true && one == false)
+		if(kanel == true && luna == false)
 		{
-			characterTwo.SetActive(true);
-			characterOne.SetActive(false);
+			characterKanel.SetActive(true);
+			characterLuna.SetActive(false);
 		}
 
 		characterSelection.SetActive(false);
@@ -112,10 +152,32 @@ public class GameManager:MonoBehaviour
 		gameIsActive = true;
 	}
 
+	public void Respawn()
+	{
+		player.SetActive(false);
+		playerController.playerRb.transform.position = spawnPosition;
+		playerController.playerRoundedPosition = spawnPosition;
+		playerController.rotation = playerRotation;
+		coolDown = 2;
+		player.SetActive(true);
+	}
+
 	void GameOver()
 	{
-		finalScore.text = scoreText.text;
+		finalScoreText.text = scoreText.text;
 		gameOverScreen.SetActive(true);
+
+		if(isGameWon == true)
+		{
+			win.SetActive(true);
+		}
+
+		else if(playerController.lives == 0)
+		{
+			gameOver.SetActive(true);
+			gameplayHUD.SetActive(false);
+			titleBackground.SetActive(true);
+		}
 	}
 
 	public void RestartGame()
@@ -126,81 +188,167 @@ public class GameManager:MonoBehaviour
 
 	public void ExitGame()
 	{
-		//EditorApplication.isPlaying = false;
 		Application.Quit();
 	}
 
 	public void GameActivity()
 	{
-		if(lives == 2)
+		if(playerController.lives < 3)
 		{
 			ThreeLife.SetActive(false);
 		}
 
-		else if(lives == 1)
+		if(playerController.lives < 2)
 		{
 			TwoLife.SetActive(false);
 		}
 
-		else if(lives == 0)
+		if(playerController.lives < 1)
 		{
 			OneLife.SetActive(false);
 		}
-		
-		if(lives < 1)
+
+		if(playerController.lives == 0)
 		{
 			gameIsActive = false;
 		}
 
+		if(printsCounter == printsRequirement)
+		{
+			AllowExit();
+		}
+
+		if(coolDown > 0)
+		{
+			coolDown -= 1 * Time.deltaTime;
+		}
+
 		else
 		{
-			if(player.activeSelf == false)
-			{
-				Respawn();
-			}
-		}
-
-		if(prints.activeSelf == false)
-		{
-			SpawnExit();
+			coolDown = 0;
 		}
 	}
 
-	public void Respawn()
+	public void AllowExit()
 	{
-		player.transform.position = spawnPosition;
-		transform.rotation = spawn.transform.rotation;
-		player.SetActive(true);
-		
-		// Reduce speed to 0 for a second
+		exit.SetActive(false);
 	}
 
-	public void SpawnExit()
+	public void LunaButton()
 	{
-		exit.SetActive(true);	
-	}
-
-	public void ButtonOneClick()
-	{
-		buttonOne.interactable = false;
-		buttonTwo.interactable = true;
+		lunaButton.interactable = false;
+		kanelButton.interactable = true;
 		start.interactable = true;
-		one = true;
-		two = false;
-
+		luna = true;
+		kanel = false;
+		playerController.lives = 3;
 	}
 
-	public void ButtonTwoClick()
+	public void KanelButton()
 	{
-		buttonTwo.interactable = false;
-		buttonOne.interactable = true;
+		kanelButton.interactable = false;
+		lunaButton.interactable = true;
 		start.interactable = true;
-		two = true;
-		one = false;
+		kanel = true;
+		luna = false;
+		playerController.lives = 1;
 	}
 
 	public void UpdateScore()
 	{
 		scoreText.text = "Score: " + score;
+	}
+
+	public void LevelChanger()
+	{
+		level++;
+
+		if(level == 1)
+		{
+			levelOne.SetActive(true);
+			spawn.transform.position = new Vector2(3f, -5f);
+			playerRotation = -90;
+			exit.transform.position = new Vector2(0f, 9f);
+			exit.SetActive(true);
+		}
+
+		else if(level == 2)
+		{
+			levelOne.SetActive(false);
+			levelTwo.SetActive(true);
+			spawn.transform.position = new Vector2(3f, 5f);
+			playerRotation = -90;
+			exit.transform.position = new Vector2(15f, 6f);
+			exit.SetActive(true);
+		}
+
+		else if(level == 3)
+		{
+			levelTwo.SetActive(false);
+			levelThree.SetActive(true);
+			spawn.transform.position = new Vector2(3f, -5f);
+			playerRotation = -90;
+			exit.transform.position = new Vector2(0f, 9f);
+			exit.SetActive(true);
+		}
+
+		else if(level == 4)
+		{
+			levelThree.SetActive(false);
+			levelFour.SetActive(true);
+			spawn.transform.position = new Vector2(3f, -5f);
+			playerRotation = -90;
+			exit.transform.position = new Vector2(0f, 9f);
+			exit.SetActive(true);
+		}
+
+		else if(level == 5)
+		{
+			levelFour.SetActive(false);
+			levelFive.SetActive(true);
+			spawn.transform.position = new Vector2(3f, -5f);
+			playerRotation = -90;
+			exit.transform.position = new Vector2(0f, 9f);
+			exit.SetActive(true);
+		}
+
+		else if(level == 6)
+		{
+			levelFive.SetActive(false);
+			levelSix.SetActive(true);
+			spawn.transform.position = new Vector2(3f, -5f);
+			playerRotation = -90;
+			exit.transform.position = new Vector2(0f, 9f);
+			exit.SetActive(true);
+		}
+
+		else if(level == 7)
+		{
+			levelSix.SetActive(false);
+			levelSeven.SetActive(true);
+			spawn.transform.position = new Vector2(3f, -5f);
+			playerRotation = -90;
+			exit.transform.position = new Vector2(0f, 9f);
+			exit.SetActive(true);
+		}
+
+		else if(level > 7)
+		{
+			levelSeven.SetActive(false);
+			gameIsActive = false;
+			isGameWon = true;
+		}
+
+		printsCounter = 0;
+		printsRequirement = GameObject.FindGameObjectsWithTag("Prints").Length;
+
+		score += (Convert.ToInt32(playerController.energy));
+
+		playerController.energy = 100;
+
+		playerController.rotation = playerRotation;
+		spawnPosition = spawn.transform.position;
+
+		Respawn();
 	}
 }

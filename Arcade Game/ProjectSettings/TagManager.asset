@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Enemy
   - Prints
+  - Energy
+  - Exit
+  - Wall
   layers:
   - Default
   - TransparentFX
