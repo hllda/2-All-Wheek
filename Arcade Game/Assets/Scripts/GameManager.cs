@@ -3,6 +3,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Button = UnityEngine.UI.Button;
 
 public class GameManager:MonoBehaviour
 {
@@ -76,7 +78,7 @@ public class GameManager:MonoBehaviour
 	public GameObject levelSix;
 	public GameObject levelSeven;
 
-	public void Start()
+	void Start()
 	{
 		level = 0;
 		score = 0;
@@ -90,6 +92,21 @@ public class GameManager:MonoBehaviour
 
 	void FixedUpdate()
 	{
+		if(Input.GetKeyDown(KeyCode.Escape) && gameIsActive && !isGameLost && !isGameWon)
+		{
+			Debug.Log("Esc was pressed");
+			
+			if(pauseMenu.activeInHierarchy == false)
+			{
+				Pause();
+			}
+			
+			else if(pauseMenu.activeInHierarchy == true)
+			{
+				Resume();
+			}
+		}
+		
 		if(player.activeInHierarchy == false)
 		{
 			Respawn();
@@ -170,6 +187,8 @@ public class GameManager:MonoBehaviour
 		if(isGameWon == true)
 		{
 			win.SetActive(true);
+			gameplayHUD.SetActive(false);
+			titleBackground.SetActive(true);
 		}
 
 		else if(playerController.lives == 0)
@@ -183,7 +202,7 @@ public class GameManager:MonoBehaviour
 	public void RestartGame()
 	{
 		SceneManager.LoadScene(SceneManager.GetSceneByName("Game").name);
-		gameOverScreen.SetActive(false);
+		Time.timeScale = 1;
 	}
 
 	public void ExitGame()
@@ -256,7 +275,7 @@ public class GameManager:MonoBehaviour
 
 	public void UpdateScore()
 	{
-		scoreText.text = "Score: " + score;
+		scoreText.text = "" + score;
 	}
 
 	public void LevelChanger()
@@ -266,9 +285,9 @@ public class GameManager:MonoBehaviour
 		if(level == 1)
 		{
 			levelOne.SetActive(true);
-			spawn.transform.position = new Vector2(3f, -5f);
+			spawn.transform.position = new Vector2(-5f, -3f);
 			playerRotation = -90;
-			exit.transform.position = new Vector2(0f, 9f);
+			exit.transform.position = new Vector2(5f, 9f);
 			exit.SetActive(true);
 		}
 
@@ -344,11 +363,27 @@ public class GameManager:MonoBehaviour
 
 		score += (Convert.ToInt32(playerController.energy));
 
-		playerController.energy = 100;
-
+		if((luna == true && kanel == false) || level == 1)
+		{
+			playerController.energy = 100;
+		}
+		
 		playerController.rotation = playerRotation;
 		spawnPosition = spawn.transform.position;
 
 		Respawn();
+	}
+
+	public void Pause()
+	{
+		Time.timeScale = 0;
+
+		pauseMenu.SetActive(true);
+	}
+
+	public void Resume()
+	{
+		pauseMenu.SetActive(false);
+		Time.timeScale = 1;	
 	}
 }

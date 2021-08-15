@@ -24,12 +24,15 @@ public class PlayerController:MonoBehaviour
 	public float verticalInput;
 	public float horizontalInput;
 	public float rotation;
+	public float previousRotation;
 	private Vector2 direction;
 	public Vector2 playerRoundedPosition;
+	public bool movingVertically;
+	public bool movingHorizontally;
 
 	// Finish
-	readonly private float xFinish = 16.3f;
-	readonly private float yFinish = 9.3f;
+	readonly private float xFinish = 16f;
+	readonly private float yFinish = 10f;
 
 	// Start is called before the first frame update
 	void Start()
@@ -59,11 +62,15 @@ public class PlayerController:MonoBehaviour
 		verticalInput = Input.GetAxis("Vertical");
 		horizontalInput = Input.GetAxis("Horizontal");
 
+
 		// Check if player is moving vertically
 		if(verticalInput != 0 && horizontalInput == 0)
 		{
 			// Sets the movement to vertical
 			direction = Vector2.up;
+
+			// Saves previous rotation
+			previousRotation = rotation;
 
 			// Sets direction to South & that Y input is negative
 			if(verticalInput < 0)
@@ -90,6 +97,16 @@ public class PlayerController:MonoBehaviour
 			}
 
 			// Making sure the player stays on the grid
+			if(previousRotation == 90)
+			{
+				playerRoundedPosition = new Vector2(Convert.ToSingle(Math.Ceiling(playerRb.transform.position.x)), playerRb.position.y);
+			}
+
+			if(previousRotation == 270)
+			{
+				playerRoundedPosition = new Vector2(Convert.ToSingle(Math.Floor(playerRb.transform.position.x)), playerRb.position.y);
+			}
+
 			playerRoundedPosition = new Vector2(Convert.ToSingle(Math.Round(playerRb.transform.position.x)), playerRb.position.y);
 		}
 
@@ -98,6 +115,9 @@ public class PlayerController:MonoBehaviour
 		{
 			// Sets the movement to horizontal
 			direction = Vector2.right;
+			
+			// Saves previous rotation
+			previousRotation = rotation;
 
 			// Sets direction to West & that X input is negative
 			if(horizontalInput < 0)
@@ -123,13 +143,31 @@ public class PlayerController:MonoBehaviour
 			}
 
 			// Making sure the player stays on the grid
-			playerRoundedPosition = new Vector2(playerRb.position.x, Convert.ToSingle(Math.Round(playerRb.transform.position.y)));
+			if(previousRotation == 0)
+			{
+				playerRoundedPosition = new Vector2(playerRb.position.x, Convert.ToSingle(Math.Ceiling(playerRb.transform.position.y)));;
+			}
+
+			else if(previousRotation == 180)
+			{
+				playerRoundedPosition = new Vector2(playerRb.position.x, Convert.ToSingle(Math.Floor(playerRb.transform.position.y)));
+			}
+
+			else
+			{
+				playerRoundedPosition = new Vector2(playerRb.position.x, Convert.ToSingle(Math.Round(playerRb.transform.position.y)));
+			}
 		}
 
 		// No input is given
 		else
 		{
 			input = 0;
+		}
+
+		if(previousRotation != rotation)
+		{
+
 		}
 
 		// Rotates Rigidbody
@@ -197,7 +235,11 @@ public class PlayerController:MonoBehaviour
 		{
 			player.SetActive(false);
 			lives--;
-			gameManager.coolDown = 3;
+			gameManager.coolDown = 2;
+			if(lives > 0 && gameManager.luna == true && gameManager.kanel == false)
+			{
+				energy = 100;
+			}
 		}
 	}
 
